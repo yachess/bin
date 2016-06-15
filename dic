@@ -105,6 +105,13 @@ then
         # colorize some titles
         sed -e'/Definition\|^Origin and E\|^Phrases rel\|Related\|^Examples of/i '$(echo -e "\e[96m")|\
         sed -e'/Definition\|^Origin and E\|^Phrases rel\|Related\|^Examples of/a '$(echo -e "\e[0m")
+elif [ $1 == "k" ]
+then
+    w3m -dump http://www.hellodictionary.com/definition/$wd |\
+        egrep -A 1000 "^$wd" |\
+        sed -e '/^play$/d;s/^play \\/\\/g;/^\s*$/d;$d;/•\s[ ]*$/d;s/^━.*/\r/g;/^See /d'|\
+        egrep -B 1000 "^\[INS"  |\
+        head -n -1 | tail -n +3
 elif [ $1 == "fr" ]
 then
     w3m -dump http://www.collinsdictionary.com/dictionary/french-english/$wd |\
