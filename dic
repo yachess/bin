@@ -1,0 +1,123 @@
+#!/bin/bash
+# Online dictionary using dict protocol and html dump.
+# version 0.1
+
+if [ $# == 0 ]
+then
+    printf "Usage: dic [l|s|w|<database>] [Word]\n"
+    printf "Example:$ dic l chair => long definition of chair.<gcide db>\n"
+    printf "        $ dic s chair => short definition of chair.<wordnet db>\n"
+    printf "        $ dic w chair => webester definition of char. \n"
+    printf "        $ dic en-ru chair => shows definition in russian.\n"
+    exit 1
+fi
+
+# Edit server list as you like.
+# Server list can be found here : https://servers.freedict.org/index.php
+# Default servers
+server="dict.org"
+freedic_server="dict.org"
+webster_server="www.merriam-webster.com"
+russian_server="dict.mova.org"
+chinese_server="dict.tw"
+
+#protocol
+protocol="dict://"
+
+# Color
+clr_hilite="\e/[31m"
+clr_normal="\e/[0m"
+
+CYAN="\\e[35m"
+NO_COLOUR="\\e[0m"
+
+if [ $1 == "showdb" ]
+then
+    curl dict://$server/"show db"
+    exit 0
+elif [ $1 == "help" ]
+then 
+    curl dict://$server/"help"
+    exit 0
+fi
+
+if [ $# -eq 1 ]
+then
+    arg1="s"
+    arg2=$1
+else
+    arg1=$1
+    arg2=$2
+fi
+
+case $arg1 in
+fr-en)
+    server=$freedic_server
+    db="fd-fra-eng"
+    ;;
+en-fr)
+    server=$freedic_server
+    db="fd-eng-fra"
+    ;;
+en-es)
+    server=$freedic_server
+    db="fd-eng-spa"
+    ;;
+es-en)
+    server=$freedic_server
+    db="fd-spa-eng"
+    ;;
+en-ru)
+    server=$russian_server
+    db="mueller24"
+    ;;
+ru-en)
+    server=$russian_server
+    db="korolew_ru-en"
+    ;;
+cn-en)
+    server=$chinese_server
+    db="cn-en"
+    ;;
+en-cn)
+    server=$chinese_server
+    db="en-cn"
+    ;;
+s|short)
+    db="wn"
+    ;;
+l|long)
+    db="gcide"
+    ;;
+*)
+    db=$arg1
+esac
+
+wd=$arg2
+
+if [  $1 == "w" ]
+then
+    w3m -dump http://$webster_server/dictionary/$wd |\
+        egrep -A 1000 "^$wd" |\
+        egrep -B 1000 "^Learn More about" |\
+        # Remove sound play tags(^play, play /),reference tags(^See..) and empty lines.
+        sed -e '/^play$/d;s/^play \\/\\/g;/^\s*$/d;$d;/•\s[ ]*$/d;s/^━.*/\r/g;/^See /d'|\
+        # colorize some titles
+        sed -e'/Definition\|^Origin and E\|^Phrases rel\|Related\|^Examples of/i '$(echo -e "\e[96m")|\
+        sed -e'/Definition\|^Origin and E\|^Phrases rel\|Related\|^Examples of/a '$(echo -e "\e[0m")
+elif [ $1 == "fr" ]
+then
+    w3m -dump http://www.collinsdictionary.com/dictionary/french-english/$wd |\
+        egrep -A 1000 "^$wd" |\
+        sed -e '/^play$/d;s/^play \\/\\/g;/^\s*$/d;$d;/•\s[ ]*$/d;s/^━.*/\r/g;/^See /d'|\
+        egrep -B 1000 "^Comments" 
+elif [ $1 == "es" ]
+then
+    w3m -dump http://www.collinsdictionary.com/dictionary/spanish-english/$wd |\
+        egrep -A 1000 "^$wd" |\
+        sed -e '/^play$/d;s/^play \\/\\/g;/^\s*$/d;$d;/•\s[ ]*$/d;s/^━.*/\r/g;/^See /d'|\
+        egrep -B 1000 "^Comments" 
+else
+    curl -s dict://$server/"DEFINE $db $wd" | tail -n +5 | head -n -3
+fi
+

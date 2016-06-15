@@ -1,0 +1,23 @@
+#! /bin/bash
+
+cd "$HOME/Downloads"
+wppr_dir="$HOME/Pictures/wallpapers"
+# create wallpaper dir.
+mkdir -p $wppr_dir
+
+#replace spaces in file name with _:fall back to this option when in trouble
+#ls *.{jpg,png} | rename 's/ /_/g'
+
+re=$( ls *.{jpg,png} | egrep 'allpaper|ackground|HD|([0-9]{4}x[0-9]{3,4})' )
+echo "$re"
+while read -r line
+do
+   mv -i "$line" $wppr_dir
+done <<< "$re"
+
+# handle the rest..
+mv -i *.{avi,mkv,mp4,m4a} "$HOME/Videos"
+mv -i *.{pdf,odt,doc,xlsx} "$HOME/Documents"
+mv -i *.{flac,mp3,odd} "$HOME/Music"
+mv -i *.{jpg,png} "$HOME/Pictures"
+

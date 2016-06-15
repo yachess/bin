@@ -1,0 +1,48 @@
+#!/bin/bash
+
+for city in "$@"
+do
+    r=$(w3m -dump aqicn.org/city/$city/en | egrep -oE "overall air quality index is [0-9]{2,3}")
+    n=6
+    ar=($r)
+    aqi_index=${ar[n-1]}
+
+    if [ -z $aqi_index  ]
+    then
+        exit 1
+    fi
+    #printf "$city AQI is $aqi_index"
+
+    if [ $aqi_index -le 30 ]
+    then
+        msg="매우 좋습니다"
+        pre="\e[96m"
+    elif [ $aqi_index -le 50 ]
+    then
+        msg="좋은 편입니다"
+        pre="\e[32m"
+    elif [ $aqi_index -le 100 ]
+    then
+        msg="보통입니다"
+        pre="\e[93m"
+    elif [ $aqi_index -le 150 ]
+    then
+        msg="민감한 사람에겐 해롭습니다"
+        pre="\e[33m"
+    elif [ $aqi_index -le 200 ]
+    then
+        msg="건강에 좋지 않습니다."
+        pre="\e[91m"
+    elif [ $aqi_index -le 300 ]
+    then
+        msg="매우 건강에 해롭습니다. "
+        pre="\e[35m"
+    else
+        msg="끔찍한 재앙입니다."
+        pre="\e[35m"
+    fi
+
+    app="\e[0m"
+
+    printf "$city 의 대기오염지수는 $pre$aqi_index$app 입니다. $pre$msg$app\n"
+done

@@ -1,0 +1,18 @@
+#!/bin/bash
+link="http://www.dictionary.com/wordoftheday/"
+
+if [ $# != 0 ]
+then
+    date=$1
+#   link=$link${date//.///}
+    link="$link$date"
+fi
+
+w3m -dump $link | egrep -A 100 "^Definitions" |\
+        # cut from ^Discover and remove ad
+        egrep -B 200 "^Discover" | sed -e '/^Learn/,+10d;$d' |\
+        sed -e '/^Definition\|^Citation\|^Origin/i '$(echo -e '\033[0;31m') |\
+        sed -e '/^Definition\|^Citation\|^Origin/a '$(echo -e '\033[0m') |\
+        sed -e '/^$/d'
+
+#       sed ':q;N;s/\n//g;t q'

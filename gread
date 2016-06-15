@@ -1,0 +1,64 @@
+#!/bin/bash
+mkdir -p $HOME/.gread
+
+# Lines to ignore to remove license text
+license_hd_lines=30
+license_tl_lines=362
+
+# vimrc file: edit it as your liking...
+vimrc_file=$HOME/.gread/vimrc
+
+# greadrc - where current book number is stored 
+grc_file=$HOME/.gread/greadrc
+
+if [ $# -eq 0 ]
+then
+    if [ -f $grc_file ]
+    then
+        read book_num < $grc_file
+    else
+        book_num=3189   # Sketches New and Old by Mark Twain
+    fi
+elif [ $# -ge 1 ]
+then
+    book_num=$1
+    echo $book_num > $grc_file
+fi
+
+file=$HOME/.gread/bk$book_num.txt
+
+# If there's no vimrc create default one.
+if [ ! -f $vimrc_file ]
+then
+    echo "set nocompatible" >> $vimrc_file
+    echo "set fileencodings=utf-8,euc-kr" >> $vimrc_file
+    echo "set showmatch" >> $vimrc_file
+    echo "set title" >>$vimrc_file    
+    echo "set wmnu" >>  $vimrc_file
+    echo "set t_Co=256" >>$vimrc_file    
+
+    # Change navigation key (like less)
+    echo "nnoremap <Space> <PageDown>" >>$vimrc_file    
+    echo "nnoremap b <PageUp>" >>$vimrc_file    
+
+    # Dictionary key '.'
+    echo "nnoremap . :!dic <C-r><C-w> <CR>" >> $vimrc_file
+    
+    # Preserve last scroll position
+    echo "au BufReadPost *" >> $vimrc_file
+    echo "\\ if line(\"'\\\"\") > 0 && line (\"'\\\"\") <= line(\"$\") |" >> $vimrc_file
+    echo "\\   exe \"normal! g\`\\\"\" |" >> $vimrc_file
+    echo "\\ endif" >> $vimrc_file
+    echo "set statusline=" >> $vimrc_file
+    echo "set statusline+=%1*\\ %<%F" >> $vimrc_file  
+    echo "set statusline+=%8*\\ %=\\ row:%l/%L\\ (%03p%%)" >> $vimrc_file
+    echo "set laststatus=2" >> $vimrc_file
+fi
+
+if [ ! -f $file ]
+then
+    curl -s http://www.gutenberg.org/files/$book_num/$book_num.txt |\
+         tail -n +$license_hd_lines | head -n -$license_tl_lines > $file
+fi
+
+vim -u $vimrc_file -R $file

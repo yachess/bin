@@ -1,0 +1,102 @@
+#!/bin/bash
+
+daum="http://media.daum.net/syndication/today_sisa.rss"
+bbc="http://feeds.bbci.co.uk/news/rss.xml"
+cnn="http://rss.cnn.com/rss/edition.rss"
+hani="http://www.hani.co.kr/rss/"
+chosun="http://myhome.chosun.com/rss/www_section_rss.xml"
+pais="http://ep00.epimg.net/rss/internacional/portada.xml"
+figaro="http://www.lefigaro.fr/rss/figaro_international.xml"
+khan="http://www.khan.co.kr/rss/rssdata/total_news.xml"
+
+max_line=25
+
+case "$1" in
+daum)
+    rss=$daum
+    ;;
+hani)
+    rss=$hani
+    rec="^크게"
+    ;;
+chosun)
+    rss=$chosun
+    ;;
+khan)
+    rss=$khan
+    ;;
+bbc)
+    rss=$bbc
+    ;;
+cnn)
+    rss=$cnn
+    ;;
+pais|elpais)
+    rss=$pais
+    ;;
+figaro|lefigaro)
+    rss=$figaro
+    ;;
+*)
+    printf "$1:Unknown source!\n"
+    printf "Usage: hl [source] [article index]\n"
+    exit 1
+    ;;
+esac
+
+$line_num 
+n=1
+
+case "$#" in
+0)
+    ;;
+1)
+    curl -s $rss |\
+        grep -A 1000 "<item>" |\
+        grep "<title>" |\
+        sed "s/^[ \t]*<title>//g;s/<\/title>//g;s/\&apos;/\'/g;s/\&amp;/\&/g" |\
+        sed 's/<!\[CDATA\[//g;s/\]\]>//g' |\
+        head -n $max_line |\
+        while read line
+        do 
+            echo $n. $line 
+            ((n+=1)) 
+        done
+    ;;
+*)
+    page=$(curl -s $rss)
+    page=$(echo -e "$page" | grep -A 1000 "<item>")
+#   titles=$(echo -e "$page" | grep "<title>" |\
+#       sed 's/^[ \t]*<title>\(.*\)<\/title>/\1/g' |\
+#       sed 's/<!\[CDATA\[//g;s/\]\]>//g')
+#   
+#   n=1
+#   echo  "$titles" |
+#   while read line
+#   do
+#       title_ar[n]="$line"
+#       ((n+=1))
+#   done 
+    
+    links=$(echo -e "$page" | grep "<link>" |\
+        sed 's/^[ \t]*<link>\(.*\)<\/link>/\1/g' |\
+        sed 's/<!\[CDATA\[//g;s/\]\]>//g')
+
+    n=1
+    echo "$links" |
+    while read line
+    do
+        if [ $2 == $n ]
+        then
+            if ( [ $# -ge 3 ] && [ $3 == "t" ] )
+            then
+                w3m $line
+            else
+                sensible-browser $line 
+            fi
+            exit 0
+        fi
+        ((n+=1))
+    done
+    ;;
+esac
