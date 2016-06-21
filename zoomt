@@ -1,14 +1,62 @@
 #!/bin/bash
-fs=`grep 'FontName' ~/.config/xfce4/terminal/terminalrc | grep -oE '[0-9]+'`
-if [ $1 == "+" ]
+fonts=("Ubuntu Mono" "Liberation Mono" "Inconsolata" "DejaVu Sans Mono" "Terminus")
+
+function next_font {
+    fidx=$(($1 + 1))
+    if [ $fidx -ge ${#fonts[@]} ]; then
+        fidx=0
+    fi
+    echo "${fonts[$fidx]}"
+}
+
+function prev_font {
+    fidx=$(($1 - 1))
+    if [ $fidx -lt 0 ]; then
+        fidx= $(({#fonts[@]} - 1))
+    fi
+    echo "${fonts[$fidx]}"
+}
+
+fstr=`grep 'FontName' ~/.config/xfce4/terminal/terminalrc | cut -d "=" -f 2` 
+# remove number part
+fname=$(echo $fstr | sed 's/\s[0-9].*//g')
+# get last word
+fsize=$(echo $fstr | cut -d " " -f `echo $fstr | wc -w`)
+
+if [ $# -eq 0 ]
 then
-    nfs=$((fs + 1))
-elif [ $1 == "-" ]
-then
-    nfs=$((fs - 1))
-else
-    exit 0
+    exit 1
 fi
-echo $nfs
-regex='s/'$fs'/'$nfs'/'
+
+# Get index of current font
+nf=${#fonts[@]}
+nf=$((nf - 1))
+for i in {0..4}; do
+    if [ "$fname" == "${fonts[$i]}" ]
+    then
+        findex=$i
+        break
+    fi
+done
+
+case $1 in
++)
+    nfsize=$((fsize + 1))
+    nfname=$fname
+    ;;
+-)
+    nfsize=$((fsize - 1))
+    nfname=$fname
+    ;;
+/)
+    nfsize=$fsize
+    nfname=$(next_font findex)
+    ;;
+=)
+    nfsize=$fsize
+    nfname=$(prev_font findex)
+    ;;
+esac
+
+regex='s/'$fname' '$fsize'/'$nfname' '$nfsize'/'
 sed -i "$regex" ~/.config/xfce4/terminal/terminalrc
