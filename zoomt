@@ -1,5 +1,7 @@
 #!/bin/bash
-fonts=("Ubuntu Mono" "Liberation Mono" "Inconsolata" "DejaVu Sans Mono" "Terminus")
+all_mono_fonts=("Ubuntu Mono" "Liberation Mono" "Monospace" "Inconsolata" "DejaVu Sans Mono" \
+    "monofur" "Courier 10 Pitch" "Terminus" "Oxygen Mono" "Bitstream Vera Sans Mono Roman") 
+fonts=("Ubuntu Mono" "Inconsolata" "DejaVu Sans Mono" "Courier 10 Pitch") 
 
 function next_font {
     fidx=$(($1 + 1))
@@ -8,55 +10,69 @@ function next_font {
     fi
     echo "${fonts[$fidx]}"
 }
-
 function prev_font {
     fidx=$(($1 - 1))
     if [ $fidx -lt 0 ]; then
-        fidx= $(({#fonts[@]} - 1))
+        len=${#fonts[@]}
+        fidx=$[$len - 1]
     fi
     echo "${fonts[$fidx]}"
 }
 
-fstr=`grep 'FontName' ~/.config/xfce4/terminal/terminalrc | cut -d "=" -f 2` 
-# remove number part
-fname=$(echo $fstr | sed 's/\s[0-9].*//g')
-# get last word
+# Extract font and size
+fstr=$(grep 'FontName' ~/.config/xfce4/terminal/terminalrc)
+fstr=${fstr#*=}
+
+# Get font name & size
+fname=$(echo $fstr | sed 's/\s\w*$//')
 fsize=$(echo $fstr | cut -d " " -f `echo $fstr | wc -w`)
 
-if [ $# -eq 0 ]
-then
+if [ $# -eq 0 ]; then
     exit 1
+elif [ -z "$fname" ]; then
+    fname=${fonts[0]}
 fi
 
 # Get index of current font
 nf=${#fonts[@]}
-nf=$((nf - 1))
-for i in {0..4}; do
-    if [ "$fname" == "${fonts[$i]}" ]
-    then
+for (( i=0; i<$nf; i++ )); do
+    if [ "$fname" == "${fonts[$i]}" ]; then
         findex=$i
         break
     fi
 done
-
-case $1 in
+case "$1" in
+1)
+    nfsize=9
+    nfname="Oxygen Mono"
+    ;;
+2)
+    nfsize=10
+    nfname="Inconsolata"
+    ;;
 +)
-    nfsize=$((fsize + 1))
+    nfsize=$[fsize+1]
     nfname=$fname
     ;;
 -)
-    nfsize=$((fsize - 1))
+    nfsize=$[fsize-1]
     nfname=$fname
     ;;
 /)
     nfsize=$fsize
     nfname=$(next_font findex)
     ;;
-=)
+*)
     nfsize=$fsize
     nfname=$(prev_font findex)
     ;;
 esac
+if [ -z "$nfname" ]; then
+    echo "empty font name"
+    exit 1
+fi
 
-regex='s/'$fname' '$fsize'/'$nfname' '$nfsize'/'
+notify-send "changing terminal font:" "$nfname $nfsize"
+regex='s/'$fstr'/'$nfname' '$nfsize'/'
 sed -i "$regex" ~/.config/xfce4/terminal/terminalrc
+
