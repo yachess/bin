@@ -1,17 +1,27 @@
 #!/bin/bash
-all_mono_fonts=("Ubuntu Mono" "Liberation Mono" "Monospace" "Inconsolata" "DejaVu Sans Mono" \
-    "monofur" "Courier 10 Pitch" "Terminus" "Oxygen Mono" "Bitstream Vera Sans Mono Roman") 
-fonts=("Ubuntu Mono" "Inconsolata" "DejaVu Sans Mono" "Courier 10 Pitch") 
+# zoomt : change terminal font on the fly
+
+# Set $use_all_fonts to true to use all monospace fonts in system
+# or only selected fonts are used
+use_all_fonts=false
+
+if $use_all_fonts; then
+    readarray -t fonts <<< "$(fc-list :spacing=mono | cut -d':' -f2 | cut -d',' -f1 |\
+        sed 's/\\//g;s/^\s*//g' | sort | uniq )"
+else
+    fonts=("DejaVu Sans Mono" "Ubuntu Mono" "Inconsolata" "Hermit light"  \
+        "Terminus" "monofur") 
+fi
 
 function next_font {
-    fidx=$(($1 + 1))
+    fidx=$[$1 + 1]
     if [ $fidx -ge ${#fonts[@]} ]; then
         fidx=0
     fi
     echo "${fonts[$fidx]}"
 }
 function prev_font {
-    fidx=$(($1 - 1))
+    fidx=$[$1 - 1]
     if [ $fidx -lt 0 ]; then
         len=${#fonts[@]}
         fidx=$[$len - 1]
@@ -33,7 +43,7 @@ elif [ -z "$fname" ]; then
     fname=${fonts[0]}
 fi
 
-# Get index of current font
+# Get index of current selected font
 nf=${#fonts[@]}
 for (( i=0; i<$nf; i++ )); do
     if [ "$fname" == "${fonts[$i]}" ]; then
@@ -41,30 +51,30 @@ for (( i=0; i<$nf; i++ )); do
         break
     fi
 done
+echo "findex=$findex"
+if [ -z $findex ]; then
+    echo "setting findex"
+    findex=0
+fi
+
 case "$1" in
 1)
-    nfsize=9
-    nfname="Oxygen Mono"
+    nfsize=9; nfname="Oxygen Mono"
     ;;
 2)
-    nfsize=10
-    nfname="Inconsolata"
+    nfsize=10; nfname="Inconsolata"
     ;;
 +)
-    nfsize=$[fsize+1]
-    nfname=$fname
+    nfsize=$[fsize+1]; nfname=$fname
     ;;
 -)
-    nfsize=$[fsize-1]
-    nfname=$fname
+    nfsize=$[fsize-1]; nfname=$fname
     ;;
 /)
-    nfsize=$fsize
-    nfname=$(next_font findex)
+    nfsize=$fsize; nfname=$(next_font findex)
     ;;
 *)
-    nfsize=$fsize
-    nfname=$(prev_font findex)
+    nfsize=$fsize;nfname=$(prev_font findex)
     ;;
 esac
 if [ -z "$nfname" ]; then
