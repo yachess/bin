@@ -21,6 +21,15 @@ then
     fi
 elif [ $# -ge 1 ]
 then
+    if [ $1 == "-l" ]
+    then
+        ls -l ~/.gread/*.txt
+        exit 0
+    elif [ $1 == "-r" ]
+    then
+        rm ~/.gread/bk$2.txt
+        exit 0
+    fi
     book_num=$1
     echo $book_num > $grc_file
 fi
@@ -33,9 +42,9 @@ then
     echo "set nocompatible" >> $vimrc_file
     echo "set fileencodings=utf-8,euc-kr" >> $vimrc_file
     echo "set showmatch" >> $vimrc_file
-    echo "set title" >>$vimrc_file    
+    echo "set title" >> $vimrc_file    
     echo "set wmnu" >>  $vimrc_file
-    echo "set t_Co=256" >>$vimrc_file    
+    echo "set t_Co=256" >> $vimrc_file    
 
     # Change navigation key (like less)
     echo "nnoremap <Space> <PageDown>" >>$vimrc_file    
@@ -50,9 +59,10 @@ then
     echo "\\   exe \"normal! g\`\\\"\" |" >> $vimrc_file
     echo "\\ endif" >> $vimrc_file
     echo "set statusline=" >> $vimrc_file
-    echo "set statusline+=%1*\\ %<%F" >> $vimrc_file  
+#   echo "set statusline+=%1*\\ %<%F" >> $vimrc_file  
     echo "set statusline+=%8*\\ %=\\ row:%l/%L\\ (%03p%%)" >> $vimrc_file
     echo "set laststatus=2" >> $vimrc_file
+    echo "%le5" >> $vimrc_file
 fi
 
 if [ ! -f $file ]

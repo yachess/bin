@@ -14,25 +14,31 @@ max_line=25
 case "$1" in
 daum)
     rss=$daum
+    opt=+35
     ;;
 hani)
     rss=$hani
     rec="^크게"
+    opt=+240
     ;;
 chosun)
     rss=$chosun
     ;;
 khan)
     rss=$khan
+    opt=+190
     ;;
 bbc)
     rss=$bbc
+    opt=+83
     ;;
 cnn)
     rss=$cnn
+    opt=+145
     ;;
 pais|elpais)
     rss=$pais
+    opt=+170
     ;;
 figaro|lefigaro)
     rss=$figaro
@@ -90,7 +96,7 @@ case "$#" in
         then
             if ( [ $# -ge 3 ] && [ $3 == "t" ] )
             then
-                w3m $line
+                w3m $opt $line
             else
                 sensible-browser $line 
             fi

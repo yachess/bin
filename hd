@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+
+$/ = '';
+while ( <> ){
+    s{
+        \A
+        (
+            Chapter
+            \s+
+            \d+
+            \s*
+            :
+            .*
+        )
+    }{<H1>$1</H1>}g;
+    print;
+}

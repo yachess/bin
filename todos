@@ -1,0 +1,4 @@
+#!/bin/bash
+# display to do list
+
+test -e ~/.todos && cat ~/.todos

@@ -1,5 +1,5 @@
 #!/bin/bash
-# zoomt : change terminal font on the fly
+# zoomt : Change terminal font on the fly
 
 # Set $use_all_fonts to true to use all monospace fonts in system
 # or only selected fonts are used
@@ -31,7 +31,7 @@ function prev_font {
 
 # Extract font and size
 fstr=$(grep 'FontName' ~/.config/xfce4/terminal/terminalrc)
-fstr=${fstr#*=}
+fstr=${fstr#*=}  #erase until '='
 
 # Get font name & size
 fname=$(echo $fstr | sed 's/\s\w*$//')
@@ -63,6 +63,9 @@ case "$1" in
     ;;
 2)
     nfsize=10; nfname="Inconsolata"
+    ;;
+3) 
+    nfsize=12; nfname="Times"
     ;;
 +)
     nfsize=$[fsize+1]; nfname=$fname

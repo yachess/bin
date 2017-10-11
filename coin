@@ -20,6 +20,7 @@ do
         rank="${BASH_REMATCH[1]}"
         coin="${BASH_REMATCH[2]}"
         name="${BASH_REMATCH[3]}"
+        mcap="${BASH_REMATCH[4]}"
         price="${BASH_REMATCH[5]}"
         vol="${BASH_REMATCH[8]}"
         change="${BASH_REMATCH[9]}"
@@ -40,9 +41,13 @@ do
         ranks[$i]=$rank
         coins[$i]=$coin
         names[$i]=$name
+        mcaps[$i]=$mcap
         prices[$i]=$price
         vols[$i]=$vol
         changes[$i]=$change
+        if [ $coin == "BTC" ]; then
+            btc_mcap=$mcap
+        fi
         i=$((i+1))
     fi
     if [ $i -eq $total ]; then
@@ -51,11 +56,18 @@ do
 done <<< "$(echo -e "$contents")"
 
 # Print in a form
-printf "%-3s | %-17s | %+10s | %+15s | %+7s\n" \
-    "RNK" "COIN" "PRICE" "VOLUME(24h)" "CHNG(24h)"
-echo "-----------------------------------------------------------------"
+printf "%-3s | %+20s | %+9s | %+13s | %+12s | %+7s\n" \
+    "RNK" "NAME & SYMBOL" "PRICE" "Market Cap" "VOLUME(24h)" "CHNG(24h)"
+echo "---------------------------------------------------------------------------------"
 for (( i=0; i<${#ranks[@]}; i++ )); do
-    printf "%-3s | %-17s | %+10s | %+15s | %+7s\n" \
-        "${ranks[$i]}" "${names[$i]}" "${prices[$i]}" \
-        "${vols[$i]}" "${changes[$i]}"
+    # Truncate trailing spaces
+    names[$i]=$(echo ${names[$i]} | sed 's/ $//')
+    # Shorten prices 
+    mcaps[$i]=$(echo ${mcaps[$i]} | sed 's/,[0-9]\+$/k/g') 
+    vols[$i]=$(echo ${vols[$i]} | sed 's/,[0-9]\+$/k/g')
+    printf "%-3s | %+20s | %+9s | %+13s | %+12s | %+7s\n" \
+        "${ranks[$i]}" "${names[$i]} ${coins[$i]}" "${prices[$i]}" \
+        "${mcaps[$i]}" "${vols[$i]}" "${changes[$i]}"
 done
+
+echo $(echo -ne "$contents" | grep "Total Market Cap:")

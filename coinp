@@ -1,0 +1,16 @@
+#! /bin/python
+
+content=$(w3m -dump coinmarketcap.com/all/views/all)
+i=0
+while read -r line; do
+    if [[ $line =~ ^[0-9]+[[:space:]]+[A-Z] ]]; then
+        lines[$i]=$line
+        symbols[$i]=$(echo $line | awk -F'$' '{print $1}' | rev | cut -d ' ' -f 2 | rev) # | rev | cut -d ' ' -f 1 | rev )
+        names[$i]=$(echo $line | awk -F'$' '{print $1}' | rev | cut -d ' ' -f 2 | rev)
+        i=$((i+1))
+    fi
+done <<< "$(echo "$content")"
+
+for (( i=0; i<50; i++ )); do
+    printf "%s\n" "${symbols[$i]}"
+done

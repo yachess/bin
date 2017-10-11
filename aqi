@@ -1,18 +1,51 @@
 #!/bin/bash
+# aqi : Shows AQI (Air Quality Index) from http://aqicn.org
+# Usage : aqi [city] => shows aqi of a city.
+#       : aqi [xxx-gu] => shows aqi of xxx district in seoul.
+#       : aqi -s    => shows all district in seoul.
+#       : aqi -i    => shows some international cities
+#       : aqi -c    => shows cities in south korea
+
+cities="ansan anyang bucheon cheonan cheongju daegu daejeon gimhae goyang gwangju suwon incheon jeonju pohang seongnam seoul"
+gus="dobong-gu dongdaemun-gu dongjak-gu gangnam-gu gangseo-gu geumcheon-gu guro-gu gwangjin-gu jongno-gu jung-gu mapo-gu nowon-gu seodaemun-gu seocho-gu songpa-gu yangcheon-gu yeongdeungpo-gu yongsan-gu gwanak-gu"
+icities="beijing shanghai shenzhen guangzhou chengdu manila kuala-lumpur seoul osaka tokyo sydney melbourne brisbane newyork"
+
+if [ $# -eq 0 ]
+then
+    aqi songpa-gu
+    exit 0
+fi
+
+if [ $1 == "-c" ]
+then
+    aqi $cities
+    exit 0
+elif [ $1 == "-s" ]
+then
+    aqi $gus
+elif [ $1 == "-i" ]
+then
+    aqi $icities
+elif [ $1 == "-h" ]
+then
+    echo "option: -c shows all cities, -i shows all international cities, -s shows district in seoul"
+fi
 
 for city in "$@"
 do
-    r=$(w3m -dump aqicn.org/city/$city/en | egrep -oE "overall air quality index is [0-9]{2,3}")
+    fcity=$city
+    if [[ $city =~ .*-gu$ ]]
+    then
+        fcity="korea/seoul/$city"
+    fi 
+    r=$(w3m -dump aqicn.org/city/$fcity/en | egrep -oE "overall air quality index is [0-9]+$")
     n=6
     ar=($r)
     aqi_index=${ar[n-1]}
 
-    if [ -z $aqi_index  ]
-    then
-        exit 1
-    fi
-    #printf "$city AQI is $aqi_index"
-
+    [ -z $aqi_index  ] && continue
+    #printf "$token AQI is $aqi_index"
+    
     if [ $aqi_index -le 30 ]
     then
         msg="매우 좋습니다"
